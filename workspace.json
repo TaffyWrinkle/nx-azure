@@ -72,6 +72,43 @@
           }
         }
       }
+    },
+    "az-copy": {
+      "root": "libs/az-copy",
+      "sourceRoot": "libs/az-copy/src",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": [
+              "libs/az-copy/tsconfig.lib.json",
+              "libs/az-copy/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/az-copy/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/az-copy/jest.config.js",
+            "tsConfig": "libs/az-copy/tsconfig.spec.json",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "dist/libs/az-copy",
+            "tsConfig": "libs/az-copy/tsconfig.lib.json",
+            "packageJson": "libs/az-copy/package.json",
+            "main": "libs/az-copy/src/index.ts",
+            "assets": ["libs/az-copy/*.md"]
+          }
+        }
+      }
     }
   },
   "cli": {
