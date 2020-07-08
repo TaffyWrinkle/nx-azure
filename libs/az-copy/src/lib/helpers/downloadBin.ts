@@ -1,37 +1,35 @@
 import { execSync } from "child_process";
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  rmdirSync,
-  unlinkSync,
-} from "fs";
+import { existsSync, mkdirSync, readdirSync, rmdirSync, unlinkSync } from "fs";
 import { DownloaderHelper } from "node-downloader-helper";
 import { join, relative, resolve } from "path";
 import { cwd } from "process";
 import { azCopyLog, DownloadBinError } from "./errorsAndMessages";
 import { DownloadLinks, downloadPath, getDownloadLink } from "./links";
 
-function prepareDir() {
-  if (existsSync(downloadPath)) {
-    readdirSync(downloadPath).map((name) => {
-      unlinkSync(join(downloadPath, name));
+function removeRecursive(path: string) {
+  if (existsSync(path)) {
+    readdirSync(path).map((name) => {
+      unlinkSync(join(path, name));
     });
-    rmdirSync(downloadPath);
+    rmdirSync(path);
   }
+}
 
+function prepareDir() {
+  removeRecursive(downloadPath);
   mkdirSync(downloadPath);
 }
 
-function extractFile(path: string) {
-  let result;
-  let extractedPath;
+function processFile(path: string) {
+  let result: string;
+  let extractedPath: string;
+
   switch (getDownloadLink()) {
     case DownloadLinks.darwin:
     case DownloadLinks.linux:
       result = execSync(`tar -xf ${path}`, { encoding: "utf8" });
       extractedPath = path.replace(".tar", "").replace(".gz", "");
+      // Copy azcopy exec file into bin
       break;
     case DownloadLinks.win32:
     case DownloadLinks.win32x64:
@@ -40,6 +38,14 @@ function extractFile(path: string) {
         { encoding: "utf8" }
       );
       extractedPath = path.replace(".zip", "");
+      if (existsSync(resolve(`${extractedPath}`, "azcopy.exe"))) {
+        execSync(
+          `powershell -command "cp '${resolve(
+            `${extractedPath}`,
+            "azcopy.exe"
+          )}' '${downloadPath}'"`
+        );
+      }
   }
 
   if (existsSync(path)) {
@@ -47,10 +53,15 @@ function extractFile(path: string) {
   }
 
   if (existsSync(resolve(`${extractedPath}`, "azcopy.exe"))) {
-    copyFileSync(resolve(`${extractedPath}`, "azcopy.exe"), downloadPath);
+    execSync(
+      `powershell -command "cp '${resolve(
+        `${extractedPath}`,
+        "azcopy.exe"
+      )}' '${downloadPath}'"`
+    );
   }
 
-  rmdirSync(extractedPath);
+  removeRecursive(extractedPath);
 
   return result;
 }
@@ -64,7 +75,7 @@ export function downloadBinaries(url: string) {
       const filePath = relative(cwd(), info.filePath);
       console.log(azCopyLog(`${filePath} - download complete`));
 
-      extractFile(filePath);
+      processFile(filePath);
 
       resolve(filePath);
     });
