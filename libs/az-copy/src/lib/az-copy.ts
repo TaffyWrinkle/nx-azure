@@ -19,9 +19,12 @@ export async function azcopy() {
           encoding: "utf8",
         },
         (error, stdout, stderr) => {
-          process.stdout.write(stdout);
-          process.stderr.write(stderr);
-          reject(new AzcopyError(error.message));
+          stdout ?? process.stdout.write(stdout);
+          stderr ?? process.stderr.write(stderr);
+          if (error) {
+            reject(new AzcopyError(error.message));
+          }
+          resolve();
         }
       );
     });
@@ -33,6 +36,9 @@ export async function azcopy() {
       if (error instanceof DownloadBinError) {
         console.error(error.message);
       }
+      throw error;
     }
   }
 }
+
+azcopy();

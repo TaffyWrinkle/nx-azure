@@ -1,6 +1,6 @@
 import { join, sep } from "path";
 
-enum DownloadLinks {
+export enum DownloadLinks {
   win32x64 = "https://aka.ms/downloadazcopy-v10-windows",
   win32 = "https://aka.ms/downloadazcopy-v10-windows-32bit",
   linux = "https://aka.ms/downloadazcopy-v10-linux",
